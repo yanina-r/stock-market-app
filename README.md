@@ -1,4 +1,6 @@
 # Market Volatility Analysis
+[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://da-26-06-24-romaniv-stock-market.streamlit.app/)
+
 ## Purpose
 This project aims to analyze the volatility of different markets, including traditional stocks and cryptocurrencies. Volatility is a crucial measure of risk in financial markets, indicating how much an asset's price fluctuates over time. By comparing the volatility of various stocks and cryptocurrencies, we can gain insights into their risk profiles and potential investment opportunities.
 
