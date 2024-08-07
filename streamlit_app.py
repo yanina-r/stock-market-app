@@ -11,7 +11,6 @@ def load_stock_data(assets, start, end):
     return data
 
 # Функція для завантаження даних про криптовалюти з CSV
-
 @st.cache
 def load_crypto_data('Stock Market Dataset.csv'):
     if os.path.exists('Stock Market Dataset.csv'):
