@@ -12,8 +12,8 @@ def load_stock_data(assets, start, end):
 
 # Функція для завантаження даних про криптовалюти з CSV
 @st.cache
-def load_crypto_data():
-    if os.path.exists():
+def load_crypto_data('Date', 'Bitcoin_Price', 'Bitcoin_Vol.', 'Ethereum_Price', 'Ethereum_Vol.'):
+    if os.path.exists('Date', 'Bitcoin_Price', 'Bitcoin_Vol.', 'Ethereum_Price', 'Ethereum_Vol.'):
         crypto_data = pd.read_csv('Stock Market Dataset.csv', parse_dates=['Date'], index_col='Date')
         return crypto_data
    
@@ -25,7 +25,7 @@ crypto_file_path = st.text_input('Stock Market Dataset.csv')
 
 # Завантаження даних
 stock_data = load_stock_data(stock_assets, start_date, end_date)
-crypto_data = load_crypto_data(crypto_file_path)
+crypto_data = load_crypto_data('Date', 'Bitcoin_Price', 'Bitcoin_Vol.', 'Ethereum_Price', 'Ethereum_Vol.')
 
 # Об'єднання даних акцій і криптовалют
 data = pd.concat([stock_data, crypto_data], axis=1).dropna()
