@@ -12,14 +12,11 @@ def load_stock_data(assets, start, end):
 
 # Функція для завантаження даних про криптовалюти з CSV
 @st.cache
-def load_crypto_data(file_path='Stock Market Dataset.csv'):
-    if os.path.exists(file_path):
-        crypto_data = pd.read_csv(file_path, parse_dates=['Date'], index_col='Date')
+def load_crypto_data():
+    if os.path.exists():
+        crypto_data = pd.read_csv('Stock Market Dataset.csv', parse_dates=['Date'], index_col='Date')
         return crypto_data
-    else:
-        st.error(f"File not found: {file_path}")
-        return pd.DataFrame()
-
+   
 # Параметри
 stock_assets = ['AAPL', 'AMZN', 'MRNA', 'TSLA']
 start_date = st.date_input('Start Date', pd.to_datetime('2019-01-01'))
