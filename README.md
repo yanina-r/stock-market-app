@@ -8,6 +8,7 @@ This project aims to analyze the volatility of different markets, including trad
 1. What is the volatility of different assets and how does it change over time?
 2. How does the volatility of stocks compare to the volatility of cryptocurrencies?
 3. Which assets are more risky and which are less risky?
+4. How volatility affects forecasting accuracy and which assets are the most challenging to predict?
 
 ## Data:
 The data used in this project includes historical price data for selected stocks and cryptocurrencies. Specifically, we will analyze the following assets: Apple Inc. (AAPL),Amazon.com Inc. (AMZN), Moderna, Inc. (MRNA),Tesla Inc. (TSLA),Bitcoin (BTC),Ethereum (ETH).
