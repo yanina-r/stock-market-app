@@ -11,11 +11,18 @@ This project aims to analyze the volatility of different markets, including trad
 4. How volatility affects forecasting accuracy and which assets are the most challenging to predict?
 
 ## Data:
-The data used in this project includes historical price data for selected stocks and cryptocurrencies. Specifically, we will analyze the following assets: Apple Inc. (AAPL),Amazon.com Inc. (AMZN), Moderna, Inc. (MRNA),Tesla Inc. (TSLA),Bitcoin (BTC),Ethereum (ETH).
+The data used in this project includes historical price data for selected stocks and cryptocurrencies. 
+Specifically, we will analyze the following assets: 
+| Companies | Crypto |
+|---------- |--------|
+| Apple Inc. (AAPL)   | Bitcoin (BTC)   |
+| Amazon.com Inc. (AMZN)   | Ethereum (ETH)   |
+| Moderna Inc. (MRNA)   |  
+| Tesla Inc. (TSLA)   | 
 
 ## Source: 
  - Yahoo Finance
- - https://www.kaggle.com/datasets/saketk511/2019-2024-us-stock-market-data
+ - [2019-2024 US Stock Market Data](https://www.kaggle.com/datasets/saketk511/2019-2024-us-stock-market-data)
 
 ## Tools and Libraries: 
 Will use various Python libraries for data analysis, including: pandas, numPy, matplotlib, yfinance, streamlit
