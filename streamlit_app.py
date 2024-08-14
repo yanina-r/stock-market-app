@@ -29,7 +29,7 @@ def load_stock_data(assets, start_date, end_date):
     return data, daily_volatility, annual_volatility
 
 def main():
-    st.title('Financial Data Analysis')
+    st.title('Market Volatility Analysis')
 
     tabs = st.tabs(["Cryptocurrency Analysis", "Stock Market Analysis", "Comparison of Cryptocurrency and Stock Volatility"])
 
