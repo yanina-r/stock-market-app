@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
 import yfinance as yf
 from datetime import datetime
 
@@ -25,27 +24,16 @@ def calculate_volatility(df, price_col):
 def load_stock_data(assets, start_date, end_date):
     data = yf.download(assets, start=start_date, end=end_date)['Adj Close']
     returns = data.pct_change()
-    daily_volatility = returns.std()
+    daily_volatility = returns.rolling(window=21).std()
     annual_volatility = daily_volatility * np.sqrt(252)
-    return returns, annual_volatility
+    return data, daily_volatility, annual_volatility
 
 def main():
     st.title('Financial Data Analysis')
 
-    # Add custom font using Google Fonts
-    st.markdown("""
-        <style>
-        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
-        body {
-            font-family: 'Roboto', sans-serif;
-        }
-        </style>
-        """, unsafe_allow_html=True)
+    tabs = st.tabs(["Cryptocurrency Analysis", "Stock Market Analysis", "Comparison of Cryptocurrency and Stock Volatility"])
 
-    # Main tab selection using radio buttons
-    tab = st.radio("Select Tab", ["Cryptocurrency", "Stock Market"])
-
-    if tab == "Cryptocurrency":
+    with tabs[0]:
         st.header('Cryptocurrency Price and Volatility Analysis')
 
         file_path = 'Cleaned_Crypto_Data.csv'
@@ -63,38 +51,38 @@ def main():
         if filtered_df.empty:
             st.write("No data available for the selected date range.")
         else:
+            st.subheader('Price Changes Analysis')
+
+            filtered_df['Price_Change_BTC'] = filtered_df['Bitcoin_Price'].diff()
+            filtered_df['Price_Change_ETH'] = filtered_df['Ethereum_Price'].diff()
+
+            assets_to_compare = st.multiselect('Select Assets to Compare', ['Bitcoin', 'Ethereum'], default=['Bitcoin', 'Ethereum'])
+
             col1, col2 = st.columns(2)
-
             with col1:
-                st.subheader('Price Changes Analysis')
-                filtered_df['Price_Change_BTC'] = filtered_df['Bitcoin_Price'].diff()
-                filtered_df['Price_Change_ETH'] = filtered_df['Ethereum_Price'].diff()
-
-                assets_to_compare = st.multiselect('Select Assets to Compare', ['Bitcoin', 'Ethereum'], default=['Bitcoin'])
-
-                if 'Bitcoin' in assets_to_compare and 'Ethereum' in assets_to_compare:
-                    st.line_chart(filtered_df.set_index('Date')[['Price_Change_BTC', 'Price_Change_ETH']])
-                elif 'Bitcoin' in assets_to_compare:
+                if 'Bitcoin' in assets_to_compare:
+                    st.write('Bitcoin Price Changes')
                     st.line_chart(filtered_df[['Date', 'Price_Change_BTC']].set_index('Date'))
-                elif 'Ethereum' in assets_to_compare:
+            with col2:
+                if 'Ethereum' in assets_to_compare:
+                    st.write('Ethereum Price Changes')
                     st.line_chart(filtered_df[['Date', 'Price_Change_ETH']].set_index('Date'))
 
-            with col2:
-                st.subheader('Volatility Analysis')
-                df_btc = calculate_volatility(filtered_df, 'Bitcoin_Price')
-                df_eth = calculate_volatility(filtered_df, 'Ethereum_Price')
+            st.subheader('Volatility Analysis')
+            df_btc = calculate_volatility(filtered_df, 'Bitcoin_Price')
+            df_eth = calculate_volatility(filtered_df, 'Ethereum_Price')
 
-                volatility_df = pd.merge(df_btc, df_eth, on='Date', suffixes=('_BTC', '_ETH'))
-
-                compare_volatility = st.checkbox('Compare Bitcoin and Ethereum Volatility on the Same Graph')
-
-                if compare_volatility:
-                    st.line_chart(volatility_df.set_index('Date')[['Volatility_BTC', 'Volatility_ETH']])
-                else:
+            col3, col4 = st.columns(2)
+            with col3:
+                if 'Bitcoin' in assets_to_compare:
+                    st.write('Bitcoin Volatility')
                     st.line_chart(df_btc.set_index('Date')['Volatility'])
+            with col4:
+                if 'Ethereum' in assets_to_compare:
+                    st.write('Ethereum Volatility')
                     st.line_chart(df_eth.set_index('Date')['Volatility'])
 
-    elif tab == "Stock Market":
+    with tabs[1]:
         st.header('Stock Returns and Volatility Analysis')
 
         st.sidebar.header('Select Date Range for Stock')
@@ -105,19 +93,44 @@ def main():
         end_date_stock = pd.to_datetime(end_date_stock)
 
         assets = ['AAPL', 'AMZN', 'MRNA', 'TSLA']
-        returns, annual_volatility = load_stock_data(assets, start_date_stock, end_date_stock)
+        stock_data, daily_volatility, annual_volatility = load_stock_data(assets, start_date_stock, end_date_stock)
 
-        col1, col2 = st.columns(2)
+        selected_stocks = st.multiselect('Select Stocks to Display', stock_data.columns.tolist(), default=stock_data.columns.tolist())
 
-        with col1:
-            st.subheader('Daily Returns Analysis')
-            selected_stocks = st.multiselect('Select Stocks to Display', returns.columns.tolist(), default=returns.columns.tolist())
-            st.line_chart(returns[selected_stocks])
+        col5, col6 = st.columns(2)
+        with col5:
+            st.write('Stock Price Changes')
+            st.line_chart(stock_data[selected_stocks])
+        with col6:
+            st.write('Stock Volatility')
+            st.line_chart(daily_volatility[selected_stocks])
 
-        with col2:
-            st.subheader('Annual Volatility Analysis')
-            st.bar_chart(annual_volatility[selected_stocks])
-            st.line_chart(annual_volatility[selected_stocks])  # Adding volatility line chart
+    with tabs[2]:
+        st.header('Comparison of Cryptocurrency and Stock Volatility')
+
+        selected_crypto = st.multiselect('Select Cryptocurrencies to Compare', ['Bitcoin', 'Ethereum'], default=['Bitcoin', 'Ethereum'])
+        selected_stocks = st.multiselect('Select Stocks to Compare', assets, default=assets)
+
+        if selected_crypto and selected_stocks:
+            # Calculate volatility for selected cryptocurrencies
+            crypto_vol = pd.DataFrame()
+            for name in selected_crypto:
+                vol_df = calculate_volatility(df, f'{name}_Price')
+                crypto_vol[name] = vol_df.set_index('Date')['Volatility']
+
+            # Combine stock and crypto volatility data
+            combined_vol_df = pd.concat([crypto_vol, daily_volatility[selected_stocks]], axis=1)
+
+            # Plot comparison chart
+            st.write('Comparison of Cryptocurrency and Stock Volatility')
+            st.line_chart(combined_vol_df)
+
+    # Increase spacing between columns by adding margin to columns
+    st.markdown("""
+        <style>
+            .css-1n07l7f {margin-left: 20px; margin-right: 20px;}
+        </style>
+    """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
