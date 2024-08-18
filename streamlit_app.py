@@ -2,7 +2,12 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import yfinance as yf
+import matplotlib.pyplot as plt
 from datetime import datetime
+from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
+from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.model_selection import train_test_split
 
 # Load and preprocess cryptocurrency data
 def load_crypto_data(file_path):
@@ -28,10 +33,17 @@ def load_stock_data(assets, start_date, end_date):
     annual_volatility = daily_volatility * np.sqrt(252)
     return data, daily_volatility, annual_volatility
 
+def forecast_data(X_train, y_train, X_test, y_test, model_name, model):
+    model.fit(X_train, y_train)
+    y_pred = model.predict(X_test)
+    mse = mean_squared_error(y_test, y_pred)
+    r2 = r2_score(y_test, y_pred)
+    return y_pred, mse, r2
+
 def main():
     st.title('Market Volatility Analysis')
 
-    tabs = st.tabs(["Cryptocurrency Analysis", "Stock Market Analysis", "Comparison of Cryptocurrency and Stock Volatility"])
+    tabs = st.tabs(["Cryptocurrency Analysis", "Stock Market Analysis", "Comparison of Cryptocurrency and Stock Volatility", "Data Forecasting"])
 
     with tabs[0]:
         st.header('Cryptocurrency Price and Volatility Analysis')
@@ -125,12 +137,104 @@ def main():
             st.write('Comparison of Cryptocurrency and Stock Volatility')
             st.line_chart(combined_vol_df)
 
-    # Increase spacing between columns by adding margin to columns
-    st.markdown("""
-        <style>
-            .css-1n07l7f {margin-left: 20px; margin-right: 20px;}
-        </style>
-    """, unsafe_allow_html=True)
+    with tabs[3]:
+        st.header('Data Forecasting')
+
+        st.sidebar.header('Select Assets for Forecasting')
+        all_assets = ['Bitcoin', 'Ethereum', 'AAPL', 'AMZN', 'MRNA', 'TSLA']
+        selected_assets = st.sidebar.multiselect('Select Assets for Forecasting', all_assets, default=['Bitcoin'])
+
+        # Load and clean data for forecasting
+        file_path = 'Cleaned_Crypto_Data.csv'
+        df = load_crypto_data(file_path)
+
+        # Data cleaning and feature engineering
+        df['Bitcoin_Price_Change'] = df['Bitcoin_Price'].diff()
+        df['Ethereum_Price_Change'] = df['Ethereum_Price'].diff()
+        df = df.dropna(subset=['Bitcoin_Price_Change', 'Ethereum_Price_Change'])
+        
+        assets = ['AAPL', 'AMZN', 'MRNA', 'TSLA']
+        start_date_stock = pd.to_datetime('2019-01-01')
+        end_date_stock = pd.to_datetime('2024-01-01')
+        stock_data, daily_volatility, annual_volatility = load_stock_data(assets, start_date_stock, end_date_stock)
+
+
+        # Initialize models
+        models = {
+            'Linear Regression': LinearRegression(),
+            'Random Forest': RandomForestRegressor(n_estimators=100, random_state=42),
+            'Gradient Boosting': GradientBoostingRegressor(n_estimators=100, random_state=42)
+        }
+        # Forecast for selected assets
+        results = {}
+        for asset in selected_assets:
+            if asset in ['Bitcoin', 'Ethereum']:
+                X_crypto = df[['Bitcoin_Price', 'Ethereum_Price']]
+                y = df['Bitcoin_Price_Change'] if asset == 'Bitcoin' else df['Ethereum_Price_Change']
+                dates = df['Date']
+
+                X_train, X_test, y_train, y_test, dates_train, dates_test = train_test_split(X_crypto, y, dates, test_size=0.3, random_state=42)
+
+                for model_name, model in models.items():
+                    y_pred, mse, r2 = forecast_data(X_train, y_train, X_test, y_test, model_name, model)
+                    results[f'{asset}_{model_name}_MSE'] = mse
+                    results[f'{asset}_{model_name}_R2'] = r2
+
+                    # Plot predictions
+                    st.subheader(f'{asset} - {model_name} Forecasting')
+                    fig, ax = plt.subplots(figsize=(14, 6))
+                    ax.scatter(dates_test, y_test, color='blue', label='Actual Price Change')
+                    ax.scatter(dates_test, y_pred, color='red', label='Predicted Price Change')
+                    ax.set_xlabel('Date')
+                    ax.set_ylabel('Price Change')
+                    ax.set_title(f'{asset} - Actual vs Predicted ({model_name})')
+                    ax.legend()
+                    ax.grid(True)
+                    plt.xticks(rotation=45)
+                    st.pyplot(fig)
+
+            if asset in ['AAPL', 'AMZN', 'MRNA', 'TSLA']:
+                stock_assets = [asset]
+                stock_data, returns, daily_volatility, annual_volatility = load_stock_data(stock_assets, start_date_stock, end_date_stock)
+
+                X_stock = stock_data.pct_change().dropna()
+                y_stock = X_stock.copy()  # Використовуємо той же набір даних для y_stock
+
+
+                # Align indices if needed (just in case)
+                X_stock, y_stock = X_stock.align(y_stock, join='inner', axis=0)
+
+                # Drop NaNs
+                X_stock = X_stock.dropna()
+                y_stock = y_stock.dropna()
+
+                # Split data for training and testing
+                X_train_stock, X_test_stock, y_train_stock, y_test_stock = train_test_split(
+                    X_stock, y_stock, test_size=0.3, random_state=42
+                )
+
+                # Forecast and plot for stocks
+                for model_name, model in models.items():
+                    y_pred_stock, mse, r2 = forecast_data(X_train_stock, y_train_stock, X_test_stock, y_test_stock, model_name, model)
+                    results[f'{asset}_{model_name}_MSE'] = mse
+                    results[f'{asset}_{model_name}_R2'] = r2
+
+                    # Plot predictions
+                    st.subheader(f'{asset} - {model_name} Forecasting')
+                    fig, ax = plt.subplots(figsize=(14, 6))
+                    ax.scatter(X_test_stock.index, y_test_stock, color='blue', label='Actual Price Change')
+                    ax.scatter(X_test_stock.index, y_pred_stock, color='red', label='Predicted Price Change')
+                    ax.set_xlabel('Date')
+                    ax.set_ylabel('Price Change')
+                    ax.set_title(f'{asset} - Actual vs Predicted ({model_name})')
+                    ax.legend()
+                    ax.grid(True)
+                    plt.xticks(rotation=45)
+                    st.pyplot(fig)
+
+        # Display results
+        st.write("Model Performance Metrics:")
+        st.write(pd.DataFrame.from_dict(results, orient='index', columns=['Value']))
 
 if __name__ == "__main__":
     main()
