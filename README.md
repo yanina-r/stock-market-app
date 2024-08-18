@@ -25,7 +25,12 @@ Specifically, we will analyze the following assets:
  - [2019-2024 US Stock Market Data](https://www.kaggle.com/datasets/saketk511/2019-2024-us-stock-market-data)
 
 ## Tools and Libraries: 
-Will use various Python libraries for data analysis, including: pandas, numPy, matplotlib, yfinance, streamlit
+Will use various Python libraries for data analysis, including: 
+- pandas
+- numPy
+- matplotlib
+- yfinance
+- streamlit
 
 ---
 ## Jupyter Notebook
