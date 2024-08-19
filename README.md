@@ -20,6 +20,12 @@ Specifically, we will analyze the following assets:
 | Moderna Inc. (MRNA)   |  
 | Tesla Inc. (TSLA)   | 
 
+## Methodology
+1.Data Collection: Loading historical stock and cryptocurrency price data.
+2.Data Processing: Calculating volatility metrics.
+3.Analysis: Comparing the volatility of stocks and cryptocurrencies.
+4.Visualization: Graphical representation of the volatility of different assets.
+
 ## Source: 
  - Yahoo Finance
  - [2019-2024 US Stock Market Data](https://www.kaggle.com/datasets/saketk511/2019-2024-us-stock-market-data)
@@ -32,6 +38,15 @@ Will use various Python libraries for data analysis, including:
 - yfinance
 - streamlit
 
+## Expected Results:
+- Assessment of volatility for each asset.
+- Comparison of the volatility between stocks and cryptocurrencies.
+- Identification of assets with the highest and lowest risk.
+
+## Conclusions:
+ - Identification of the most volatile and stable assets.
+ - Assessment of risks for investors.
+ - Recommendations for making investment decisions.
 ---
 ## Jupyter Notebook
 https://www.datacamp.com/datalab/w/d6d77573-9b18-45d3-bc1d-37fd9b7c169b/edit 
